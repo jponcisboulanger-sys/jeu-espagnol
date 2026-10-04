@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>🇪🇸 Mis abuelos, mis padres y yo — Challenge</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#f5f5f7;color:#202124}
+main{max-width:760px;margin:auto;padding:20px}.panel{background:white;border:1px solid #ddd;border-radius:22px;padding:22px;box-shadow:0 4px 20px #0000000b}
+.card{background:#fafafa;border:1px solid #ddd;border-radius:16px;padding:16px;margin-top:12px}
+button,input{font:inherit}button{width:100%;min-height:48px;border:1px solid #ccc;border-radius:12px;padding:10px 14px;background:white;cursor:pointer;font-weight:700;margin-top:9px}
+button:hover{border-color:#555}button.primary{background:#202124;color:white;border-color:#202124}
+button.correct{background:#e8f6ed;border-color:#3d8b5b}button.wrong{background:#fff0f0;border-color:#c94c4c}
+button.selected{background:#ececff;border-color:#555}
+button:disabled{cursor:default;opacity:.95}
+input{width:100%;padding:12px;border:1px solid #ccc;border-radius:12px;margin-top:8px}
+.hidden{display:none}.center{text-align:center}.muted{opacity:.68}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.hud{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.hud>div{text-align:center;padding:9px;border:1px solid #ddd;border-radius:12px}
+.timer{height:9px;background:#ddd;border-radius:20px;overflow:hidden;margin:8px 0 18px}.bar{height:100%;width:100%;background:#333;transition:width .08s linear}.danger{background:#d84b4b}
+.big{font-size:1.2rem;font-weight:900}.count{font-size:5rem;font-weight:900;padding:30px}
+@media(max-width:520px){main{padding:10px}.panel{padding:15px}.grid{grid-template-columns:1fr 1fr}.hud{gap:5px}.hud>div{padding:7px 3px;font-size:.9rem}}
+</style>
+</head>
+<body>
+<main><div class="panel">
+
+<section id="home">
+<div class="center">
+<div style="font-size:50px">🇪🇸</div><div class="muted"><b>CHALLENGE D'ESPAGNOL • 6e</b></div>
+<h1>Mis abuelos, mis padres y yo</h1>
+<p class="muted">20 questions • 3 vies • classement partagé</p>
+</div>
+<div class="card">
+<label><b>👤 Ton pseudo</b></label>
+<input id="pseudo" maxlength="18" placeholder="Ex. Manon_6A" autocomplete="off">
+<div id="pseudoErr" class="muted"></div>
+</div>
+<div class="grid">
+<div class="card center">❤️❤️❤️<br><small>3 vies</small></div>
+<div class="card center">❓20<br><small>questions</small></div>
+<div class="card center">⏱️15 s<br><small>QCM</small></div>
+<div class="card center">✍️25 s<br><small>écrit</small></div>
+<div class="card center">🏆100<br><small>max/question</small></div>
+<div class="card center">🥇<br><small>classement</small></div>
+</div>
+<div class="card">
+<b>Barème</b><br>
+1 bonne réponse attendue : 100 pts si trouvée.<br>
+2 bonnes réponses attendues : 50 / 100 pts.<br>
+3 bonnes réponses attendues : 25 / 50 / 100 pts.<br>
+Une question sans bonne réponse trouvée = 0 pt.
+</div>
+<button id="start" class="primary">🚀 Commencer</button>
+<button id="leaderboardBtn">🏆 Voir le classement</button>
+</section>
+
+<section id="countdown" class="hidden center"><div class="muted">PRÉPARE-TOI...</div><div id="count" class="count">3</div><b id="welcome"></b></section>
+
+<section id="game" class="hidden">
+<div style="display:flex;justify-content:space-between"><b id="player"></b><b id="qnum"></b></div>
+<div class="hud" style="margin-top:12px">
+<div>SCORE<br><span id="score" class="big">0</span></div>
+<div>VIES<br><span id="lives" class="big">❤️❤️❤️</span></div>
+<div>RACHA<br><span id="streak" class="big">🔥0</span></div>
+</div>
+<div style="display:flex;justify-content:space-between;margin-top:14px"><b id="type"></b><b id="timeText">⏱️15.0s</b></div>
+<div class="timer"><div id="bar" class="bar"></div></div>
+<div class="card"><h2 id="question"></h2><div id="instruction" class="muted"></div></div>
+<div id="answers"></div>
+<div id="feedback" style="min-height:32px;margin-top:12px;font-weight:700"></div>
+<button id="next" class="primary hidden">Continuer →</button>
+</section>
+
+<section id="result" class="hidden center">
+<div style="font-size:55px" id="resultIcon">🏆</div><h1 id="resultTitle"></h1><p id="resultMsg" class="muted"></p>
+<div class="card"><div class="muted">Joueur</div><h2 id="resultPlayer"></h2><div class="muted">Score final</div><div id="finalScore" style="font-size:48px;font-weight:900">0</div></div>
+<div class="grid">
+<div class="card"><b id="finalCorrect">0/20</b><br><small>correctes</small></div>
+<div class="card"><b id="finalStreak">0</b><br><small>meilleure série</small></div>
+<div class="card"><b id="finalLives">0/3</b><br><small>vies restantes</small></div>
+</div>
+<button id="submitScore" class="primary">🏆 Envoyer au classement</button>
+<div id="submitMsg" class="muted"></div>
+<button id="again">🔄 Rejouer</button>
+<button id="showBoard">🥇 Classement</button>
+</section>
+
+<section id="board" class="hidden">
+<h2>🏆 Classement</h2><p class="muted">Les meilleurs scores enregistrés.</p>
+<div id="boardList" class="card">Chargement...</div>
+<button id="back">← Retour</button>
+</section>
+
+</div></main>
+<script>
+/* Pour activer le classement partagé, renseigne les 2 constantes SUPABASE_URL et SUPABASE_ANON_KEY.
+   Voir README.md et supabase.sql. Sans ces valeurs, le jeu reste jouable mais le classement partagé est désactivé. */
+const SUPABASE_URL="";
+const SUPABASE_ANON_KEY="";
+
+const questions=[
+{t:"V",q:"¿Cómo se dice « les grands-parents » en español?",a:["Los padres","Los abuelos","Los orígenes","La familia"],ok:[1]},
+{t:"T",q:"¿A quiénes representa Frida en este cuadro?",a:["A sus abuelos","A sus padres","A ella misma","A sus amigos"],ok:[0,1,2]},
+{t:"T",q:"¿Qué simboliza el lazo rojo?",a:["La vida","Los vínculos familiares","La riqueza","El viaje"],ok:[0,1]},
+{t:"V",q:"¿Cómo se dice « la famille » en español?",a:["La vida","La familia","La identidad","La naturaleza"],ok:[1]},
+{t:"T",q:"¿Qué elementos muestran las raíces mexicanas de Frida?",a:["El paisaje de México","La casa azul","El uniforme escolar","La naturaleza"],ok:[0,1,3]},
+{t:"V",q:"¿Qué significa « el árbol genealógico »?",a:["L’arbre généalogique","Le ruban rouge","La maison bleue","Le paysage"],ok:[0]},
+{t:"T",q:"¿Qué representan el espermatozoide, el óvulo y el polen?",a:["El origen de la vida","Los abuelos","La escuela","La familia"],ok:[0]},
+{t:"V",q:"¿Cómo se dice « les racines / les origines »?",a:["Los padres","Las raíces / los orígenes","Los abuelos","La vida"],ok:[1]},
+{t:"T",q:"¿Qué construye la identidad de una persona?",a:["La familia","Las raíces y los orígenes","Solo el paisaje","Solo la escuela"],ok:[0,1]},
+{t:"V",q:"¿Qué significa « el lazo rojo »?",a:["Le pollen","Le ruban rouge","La vie","La nature"],ok:[1]},
+{t:"V",q:"¿Cómo se dice « venir de »?",a:["Mostrar","Construir","Venir de","Representar"],ok:[2]},
+{t:"T",q:"¿Por qué el paisaje de México es importante?",a:["Porque muestra sus raíces mexicanas","Porque muestra su edad","Porque representa su escuela","Porque muestra un viaje"],ok:[0]},
+{t:"V",q:"¿Cómo se dice « la vie »?",a:["La casa","La familia","La vida","La identidad"],ok:[2]},
+{t:"T",q:"¿Qué relación existe entre la familia y la identidad?",a:["La familia forma parte de la identidad","Las raíces no tienen importancia","La familia ayuda a construir la identidad","La identidad no depende de los orígenes"],ok:[0,2]},
+{t:"V",q:"¿Qué significa « mostrar »?",a:["Construire","Montrer","Venir de","Relier"],ok:[1]},
+{t:"T",q:"¿Qué elementos están relacionados con el origen de la vida?",a:["El espermatozoide","El óvulo","El polen","La casa azul"],ok:[0,1,2]},
+{t:"V",q:"¿Cómo se dice « construire » en español?",a:["Mostrar","Construir","Venir","Representar"],ok:[1]},
+{t:"T",q:"¿Qué idea principal presenta el cuadro?",a:["Las raíces forman parte de la identidad","La familia no tiene importancia","Los orígenes participan en la identidad","Solo importa el presente"],ok:[0,2]},
+{t:"V",q:"¿Cómo se dice « le paysage du Mexique »?",a:["La naturaleza","El paisaje de México","La casa azul","El polen"],ok:[1]},
+{t:"W",q:"Escribe en español: « la famille » = ______",answers:["la familia"]}
+];
+
+const $=id=>document.getElementById(id);
+let order=[],idx=0,score=0,lives=3,streak=0,best=0,correct=0,timer=null,locked=false,pseudo="",time=15,selected=[];
+function show(id){["home","countdown","game","result","board"].forEach(x=>$(x).classList.toggle("hidden",x!==id))}
+function shuffle(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function hearts(){return "❤️".repeat(lives)+"🖤".repeat(3-lives)}
+function norm(s){return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim()}
+function start(){
+ pseudo=$("pseudo").value.trim().replace(/\s+/g,"_");
+ if(pseudo.length<2){$("pseudoErr").textContent="⚠️ Choisis un pseudo d’au moins 2 caractères.";return}
+ $("pseudoErr").textContent="";score=0;lives=3;streak=0;best=0;correct=0;idx=0;selected=[];order=shuffle([...Array(20).keys()]);
+ $("welcome").textContent="¡Buena suerte, "+pseudo+"!";show("countdown");let n=3;$("count").textContent=n;
+ let c=setInterval(()=>{n--;if(n<=0){clearInterval(c);show("game");render()}else $("count").textContent=n},750)
+}
+function render(){
+ clearInterval(timer);locked=false;selected=[];let q=questions[order[idx]],written=q.t==="W";time=written?25:15;
+ $("player").textContent="👤 "+pseudo;$("qnum").textContent=(idx+1)+"/20";$("score").textContent=score;$("lives").textContent=hearts();$("streak").textContent="🔥"+streak;
+ $("type").textContent=written?"✍️ RESPUESTA ESCRITA":q.t==="T"?"🖼️ CUADRO":"📚 VOCABULARIO";
+ $("question").textContent=q.q;$("instruction").textContent=written?"Escribe la respuesta en español.":q.ok.length===1?"Elige 1 respuesta correcta.":"Elige "+q.ok.length+" respuestas correctas.";
+ $("feedback").textContent="";$("next").classList.add("hidden");$("bar").style.width="100%";$("bar").classList.remove("danger");$("answers").innerHTML="";
+ if(written){
+   let inp=document.createElement("input");inp.id="written";inp.placeholder="Escribe tu respuesta…";$("answers").appendChild(inp);
+   let b=document.createElement("button");b.className="primary";b.textContent="Valider";b.onclick=()=>writtenAnswer(inp);$("answers").appendChild(b);
+   inp.onkeydown=e=>{if(e.key==="Enter")writtenAnswer(inp)};setTimeout(()=>inp.focus(),30)
+ }else q.a.forEach((txt,n)=>{let b=document.createElement("button");b.textContent=String.fromCharCode(65+n)+". "+txt;b.dataset.i=n;b.onclick=()=>choose(n,b,q);$("answers").appendChild(b)});
+ startTimer()
+}
+function startTimer(){let max=questions[order[idx]].t==="W"?25:15,start=performance.now();timer=setInterval(()=>{time=Math.max(0,max-(performance.now()-start)/1000);$("timeText").textContent="⏱️"+time.toFixed(1)+"s";$("bar").style.width=(time/max*100)+"%";if(time<=5)$("bar").classList.add("danger");if(time<=0){clearInterval(timer);timeout()}},70)}
+function finish(points,msg,ok){
+ if(locked)return;locked=true;clearInterval(timer);
+ if(ok){correct++;streak++;best=Math.max(best,streak);score+=points;$("score").textContent=score;$("streak").textContent="🔥"+streak}
+ else{lives--;streak=0;$("lives").textContent=hearts();$("streak").textContent="🔥0"}
+ $("feedback").textContent=msg;$("next").classList.remove("hidden");$("next").textContent=(lives<=0||idx===19)?"🏆 Voir mon résultat":"Continuer →"
+}
+function choose(n,b,q){
+ if(locked)return;
+ if(q.ok.length===1){$("answers").querySelectorAll("button").forEach(x=>x.disabled=true);if(n===q.ok[0]){b.classList.add("correct");finish(100,"✅ ¡Correcto! +100 puntos",true)}else{b.classList.add("wrong");$("answers").querySelectorAll("button")[q.ok[0]].classList.add("correct");finish(0,"❌ 0 punto.",false)}return}
+ let p=selected.indexOf(n);if(p>=0){selected.splice(p,1);b.classList.remove("selected")}else{if(selected.length>=q.ok.length)return;selected.push(n);b.classList.add("selected")}
+ if(selected.length===q.ok.length){
+   let found=selected.filter(x=>q.ok.includes(x)).length;
+   let pts=q.ok.length===2?(found===2?100:found===1?50:0):(found===3?100:found===2?50:found===1?25:0);
+   $("answers").querySelectorAll("button").forEach(x=>x.disabled=true);q.ok.forEach(x=>$("answers").querySelectorAll("button")[x].classList.add("correct"));selected.filter(x=>!q.ok.includes(x)).forEach(x=>$("answers").querySelectorAll("button")[x].classList.add("wrong"));
+   finish(pts,found===q.ok.length?"✅ ¡Perfecto! +"+pts+" puntos":"🟡 "+found+" buena(s) réponse(s) → +"+pts+" points",pts>0)
+ }
+}
+function writtenAnswer(inp){if(locked)return;let q=questions[order[idx]],ok=q.answers.some(x=>norm(x)===norm(inp.value));inp.disabled=true;$("answers").querySelectorAll("button").forEach(x=>x.disabled=true);finish(ok?100:0,ok?"✅ ¡Correcto! +100 puntos":"❌ 0 punto. Réponse attendue : "+q.answers[0],ok)}
+function timeout(){if(locked)return;let q=questions[order[idx]];if(q.t==="W"){let i=$("written");if(i)i.disabled=true}else{$("answers").querySelectorAll("button").forEach(x=>x.disabled=true);q.ok.forEach(x=>$("answers").querySelectorAll("button")[x].classList.add("correct"))}finish(0,"⏰ ¡Tiempo agotado! 0 punto.",false)}
+function result(){show("result");$("resultPlayer").textContent=pseudo;$("finalScore").textContent=score;$("finalCorrect").textContent=correct+"/20";$("finalStreak").textContent=best;$("finalLives").textContent=lives+"/3";$("submitMsg").textContent=""}
+async function submitScore(){
+ if(!SUPABASE_URL||!SUPABASE_ANON_KEY){$("submitMsg").textContent="⚠️ Le classement partagé n’est pas encore configuré. Consulte README.md.";return}
+ try{
+  let r=await fetch(SUPABASE_URL+"/rest/v1/scores",{method:"POST",headers:{"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json","Prefer":"return=minimal"},body:JSON.stringify({pseudo,score,correct,lives})});
+  $("submitMsg").textContent=r.ok?"✅ Score envoyé au classement !":"❌ Impossible d’envoyer le score.";
+ }catch(e){$("submitMsg").textContent="❌ Erreur de connexion."}
+}
+async function board(){
+ show("board");$("boardList").textContent="Chargement...";
+ if(!SUPABASE_URL||!SUPABASE_ANON_KEY){$("boardList").textContent="⚠️ Classement non configuré. Consulte README.md.";return}
+ try{
+  let r=await fetch(SUPABASE_URL+"/rest/v1/scores?select=pseudo,score,correct,created_at&order=score.desc&limit=20",{headers:{apikey:SUPABASE_ANON_KEY,Authorization:"Bearer "+SUPABASE_ANON_KEY}});
+  if(!r.ok)throw 0;let rows=await r.json();$("boardList").innerHTML=rows.length?rows.map((x,i)=>"<div style='padding:9px;border-bottom:1px solid #ddd'><b>"+(i+1)+". "+esc(x.pseudo)+"</b> — "+x.score+" pts <span class='muted'>("+x.correct+"/20)</span></div>").join(""):"Aucun score pour le moment.";
+ }catch(e){$("boardList").textContent="❌ Impossible de charger le classement."}
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+$("start").onclick=start;$("next").onclick=()=>{if(lives<=0||idx===19)result();else{idx++;render()}};$("again").onclick=()=>{show("home");$("pseudo").value=pseudo};$("submitScore").onclick=submitScore;$("leaderboardBtn").onclick=board;$("showBoard").onclick=board;$("back").onclick=()=>show("home");
+</script>
+</body></html>
